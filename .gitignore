@@ -1,1 +1,22 @@
-node_modules
+# dependencies
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# environment variables
+.env
+.env.* 
+
+# logs
+logs
+*.log
+
+# build artifacts
+dist
+coverage
+.tmp
+
+# system files
+.DS_Store
+Thumbs.db

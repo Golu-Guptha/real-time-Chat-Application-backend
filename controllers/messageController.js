@@ -1,4 +1,5 @@
 const Message = require('../models/Message');
+const Channel = require('../models/Channel');
 
 exports.getMessages = async (req, res) => {
     try {
@@ -24,10 +25,17 @@ exports.createMessage = async (req, res) => {
         const { channelId, content } = req.body;
         const senderId = req.user.id;
 
+        // Validation: Must have content OR file
+        if (!content && !req.file) {
+            return res.status(400).json({ msg: 'Message must have content or file' });
+        }
+
         const newMessage = new Message({
             sender: senderId,
             channel: channelId,
-            content
+            content: content || '', // Allow empty content if file exists
+            fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
+            fileType: req.file ? (req.file.mimetype.startsWith('image/') ? 'image' : 'file') : null
         });
 
         const savedMessage = await newMessage.save();
@@ -48,13 +56,36 @@ exports.deleteMessage = async (req, res) => {
             return res.status(404).json({ msg: 'Message not found' });
         }
 
-        // Check user
-        if (message.sender.toString() !== req.user.id) {
-            return res.status(401).json({ msg: 'User not authorized' });
+        const channel = await Channel.findById(message.channel);
+        if (!channel) {
+            return res.status(404).json({ msg: 'Channel not found' });
+        }
+
+        const isSender = message.sender.toString() === req.user.id;
+
+        let isAdmin = false;
+        if (channel.admin) {
+            // Handle if admin is populated (object) or unpopulated (id)
+            const adminId = channel.admin._id ? channel.admin._id.toString() : channel.admin.toString();
+            isAdmin = adminId === req.user.id;
+        }
+
+        console.log(`[DELETE MSG] User=${req.user.id} MsgID=${req.params.id} ChannelID=${channel._id} Admin=${channel.admin} IsSender=${isSender} IsAdmin=${isAdmin}`);
+
+        if (!isSender && !isAdmin) {
+            // Return 403 FORBIDDEN so the user is not logged out (401 triggers logout)
+            return res.status(403).json({ msg: 'User not authorized to delete this message' });
         }
 
         message.isDeleted = true;
-        message.content = 'This message was deleted';
+        message.deletedBy = req.user.id;
+
+        // Set specific text based on who deleted it
+        if (isAdmin && !isSender) {
+            message.content = 'Admin has deleted that message';
+        } else {
+            message.content = 'This message was deleted';
+        }
 
         await message.save();
 

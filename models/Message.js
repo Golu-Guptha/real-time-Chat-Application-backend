@@ -20,9 +20,21 @@ const messageSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    fileUrl: {
+        type: String
+    },
+    fileType: {
+        type: String,
+        enum: ['image', 'file', null],
+        default: null
+    },
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    deletedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
 });
 

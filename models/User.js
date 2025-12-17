@@ -27,7 +27,26 @@ const userSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    friends: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    friendRequests: [{
+        sender: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'accepted', 'rejected'],
+            default: 'pending'
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 });
 
 module.exports = mongoose.model('User', userSchema);

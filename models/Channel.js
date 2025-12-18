@@ -38,6 +38,10 @@ const channelSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    lastMessageAt: {
+        type: Date,
+        default: Date.now
     }
 });
 

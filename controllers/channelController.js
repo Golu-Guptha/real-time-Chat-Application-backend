@@ -30,7 +30,8 @@ exports.getChannels = async (req, res) => {
     try {
         const channels = await Channel.find()
             .populate('members', 'username isOnline')
-            .populate('admin', 'username');
+            .populate('admin', 'username')
+            .sort({ lastMessageAt: -1 }); // Sort by newest activity
         res.json(channels);
     } catch (err) {
         console.error(err.message);

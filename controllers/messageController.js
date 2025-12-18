@@ -41,6 +41,9 @@ exports.createMessage = async (req, res) => {
         const savedMessage = await newMessage.save();
         const populatedMessage = await savedMessage.populate('sender', 'username');
 
+        // Update Channel lastMessageAt
+        await Channel.findByIdAndUpdate(channelId, { lastMessageAt: new Date() });
+
         res.status(201).json(populatedMessage);
     } catch (err) {
         console.error(err.message);
